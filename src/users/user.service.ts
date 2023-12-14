@@ -106,4 +106,10 @@ export class UserService {
       throw new NotFoundException('Folder not found');
     }
   }
+
+  async findUserByEmail(userEmail: string): Promise<User | null> {
+    const user = await this.userModel.findOne({ userEmail }).exec();
+
+    return user;
+  }
 }

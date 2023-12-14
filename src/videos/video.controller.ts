@@ -1,27 +1,23 @@
 import {
   Controller,
   Get,
-  Post,
   Put,
-  Delete,
   Param,
   Req,
   Res,
   Body,
   UseInterceptors,
   UploadedFile,
-  UseGuards,
   Inject,
 } from '@nestjs/common';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { User } from 'src/models/users.model';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { VideoService } from './video.service';
-import * as express from '@nestjs/platform-express';
-import { Multer } from 'multer';
 import { getModelToken } from '@nestjs/mongoose';
 import { Folder } from 'src/models/folders.model';
 import { Response } from 'express';
+import { Multer } from 'multer';
 
 @Controller('videos')
 export class VideoController {
@@ -35,7 +31,7 @@ export class VideoController {
   @Get('process')
   @UseInterceptors(FileInterceptor('webmFile'))
   async createFolder(@Req() req: any, @Res() res: any): Promise<void> {
-    const userId = req.user.userId;
+    const userId = req.user._id;
     const folder = await this.videoService.getFolderIdByUser(userId);
     return res.json({ folderId: folder._id, status: folder.status });
   }
@@ -51,7 +47,7 @@ export class VideoController {
   ): Promise<void> {
     const parsedTimestamps = JSON.parse(timestamps);
     console.log('녹화 중인 유저 : ', req.user);
-    const userId = req.user.userId;
+    const userId = req.user._id;
     await this.videoService.processVideoAndImages(
       webmFile,
       parsedTimestamps,

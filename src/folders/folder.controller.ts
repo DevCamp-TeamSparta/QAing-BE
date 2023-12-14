@@ -6,9 +6,7 @@ import {
   Body,
   Param,
   UseGuards,
-  Req,
   Res,
-  NotFoundException,
 } from '@nestjs/common';
 import { FolderService } from './folder.service';
 import { UpdateIssueFileDto } from 'src/dto/updateIssueFile.dto';
