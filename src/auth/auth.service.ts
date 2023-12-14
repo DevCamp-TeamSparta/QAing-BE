@@ -20,8 +20,6 @@ export class AuthService {
   async findOrCreate(profile: any): Promise<User> {
     const userEmail = profile.userEmail; // 여기에 사용자의 이메일 또는 다른 식별 정보를 넣어야 합니다.
     let user = await this.userModel.findOne({ userEmail });
-    console.log('프로필 리프레시 토큰 : ', profile.refreshToken);
-
     if (!user) {
       user = await this.userModel.create({
         userEmail: userEmail,
@@ -62,6 +60,23 @@ export class AuthService {
     } catch (error) {
       console.error('Error refreshing access token:', error);
       throw new Error('Failed to refresh access token');
+    }
+  }
+
+  async getGoogleUserProfile(accessToken: string) {
+    try {
+      const response = await axios.get(
+        'https://www.googleapis.com/oauth2/v2/userinfo',
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
+      return response.data; // 여기서 반환된 사용자 정보
+    } catch (error) {
+      console.error('Error retrieving Google user profile:', error);
+      throw new Error('Failed to retrieve Google user profile');
     }
   }
 }

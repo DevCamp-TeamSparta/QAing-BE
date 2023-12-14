@@ -6,7 +6,6 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { AppService } from 'src/app.service';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
@@ -40,7 +39,6 @@ export class AuthController {
       // `accessToken`은 생성하지만, `refreshToken`은 Google로부터 받은 것을 사용
       const accessToken = this.authService.generateJwtToken(user);
       const refreshToken = user.refreshToken; // Google로부터 받은 refreshToken 사용
-      console.log('리퀘스트 헤더 : ', req.headers.host);
       const sameSite = req.headers.host.includes('.qaing.co') ? 'None' : '';
 
       // 쿠키에 토큰 설정

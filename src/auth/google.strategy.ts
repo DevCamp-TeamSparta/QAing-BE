@@ -9,7 +9,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     super({
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: 'https://test.qaing.co/auth/google/callback',
+      callbackURL: process.env.GOOGLE_REDIRECT_URI,
       scope: ['email', 'profile'],
     });
   }
@@ -28,7 +28,6 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     done: VerifyCallback,
   ): Promise<any> {
     const { emails, displayName, photos } = profile;
-    console.log('프로필 : ', profile);
     const user = {
       userEmail: emails[0].value,
       userName: displayName,
@@ -36,7 +35,6 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       accessToken,
       refreshToken,
     };
-    console.log('리프레시 토큰 : ', user.refreshToken);
     const userInDB = await this.authService.findOrCreate(user);
     done(null, userInDB);
   }

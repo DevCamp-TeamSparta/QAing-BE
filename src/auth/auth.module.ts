@@ -34,6 +34,7 @@ import { Folder, FolderSchema } from 'src/models/folders.model';
     GoogleStrategy,
     ConfigService,
     AppService,
+    UserService,
   ],
 })
 export class AuthModule {}

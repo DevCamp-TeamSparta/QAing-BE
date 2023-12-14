@@ -9,6 +9,7 @@ import { AuthMiddleware } from 'src/auth/auth.middleware';
 import { AuthService } from 'src/auth/auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { Folder, FolderSchema } from 'src/models/folders.model';
+import { UserService } from 'src/users/user.service';
 
 @Module({
   imports: [
@@ -19,7 +20,13 @@ import { Folder, FolderSchema } from 'src/models/folders.model';
     ]),
   ],
   controllers: [VideoController],
-  providers: [VideoService, ConfigService, AuthService, JwtService],
+  providers: [
+    VideoService,
+    ConfigService,
+    AuthService,
+    JwtService,
+    UserService,
+  ],
   exports: [VideoService],
 })
 export class VideoModule implements NestModule {
