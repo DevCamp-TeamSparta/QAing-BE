@@ -18,36 +18,29 @@ export class UserService {
   async updatePreInfo(
     userId: string,
     updateUserDto: UpdateUserDto,
-  ): Promise<User> {
-    const existingUser = await this.userModel.findById(userId);
+  ): Promise<boolean> {
+    try {
+      const existingUser = await this.userModel.findById(userId);
+      // 업데이트된 필드값을 적용합니다.
+      Object.assign(existingUser, updateUserDto);
 
-    if (!existingUser) {
-      throw new NotFoundException('User not found');
+      // 업데이트된 사용자를 저장하고 반환합니다.
+      await existingUser.save();
+
+      return true;
+    } catch (error) {
+      return false;
     }
-
-    // 업데이트된 필드값을 적용합니다.
-    Object.assign(existingUser, updateUserDto);
-
-    // 업데이트된 사용자를 저장하고 반환합니다.
-    return existingUser.save();
   }
 
   async getUserInfo(userId: string): Promise<User> {
     const user = await this.userModel.findById(userId);
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
 
     return user;
   }
 
   async getAllUserFolders(userId: string): Promise<Folder[]> {
     const user = await this.userModel.findById(userId);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
     const foldersWithContents: Folder[] = [];
 
     for (const folderId of user.folders) {
@@ -59,8 +52,6 @@ export class UserService {
       }
     }
 
-    console.log('유저 : ', user);
-
     return foldersWithContents;
   }
 
@@ -69,16 +60,12 @@ export class UserService {
     updateUserDto: UpdateUserDto,
   ): Promise<User> {
     const existingUser = await this.userModel.findById(userId);
-
-    if (!existingUser) {
-      throw new NotFoundException('User not found');
-    }
-
     // 업데이트된 필드값을 적용합니다.
     Object.assign(existingUser, updateUserDto);
 
     // 업데이트된 사용자를 저장하고 반환합니다.
-    return await existingUser.save();
+    await existingUser.save();
+    return;
   }
 
   async updateFolderName(
@@ -92,10 +79,8 @@ export class UserService {
       throw new NotFoundException('Folder not found');
     }
 
-    // 폴더 이름을 업데이트합니다.
     existingFolder.folderName = updateFolderDto.newFolderName;
 
-    // 업데이트된 폴더를 저장하고 반환합니다.
     return existingFolder.save();
   }
 

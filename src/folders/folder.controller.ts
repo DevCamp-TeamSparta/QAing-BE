@@ -7,16 +7,86 @@ import {
   Param,
   UseGuards,
   Res,
+  Req,
 } from '@nestjs/common';
 import { FolderService } from './folder.service';
 import { UpdateIssueFileDto } from 'src/dto/updateIssueFile.dto';
 import { AuthMiddleware } from 'src/auth/auth.middleware';
+import { UpdateFolderDto } from 'src/dto/updateFolder.dto';
+import { UserService } from 'src/users/user.service';
 import { Types } from 'mongoose';
 
 @Controller('folders')
 @UseGuards(AuthMiddleware)
 export class FoldersController {
-  constructor(private readonly foldersService: FolderService) {}
+  constructor(
+    private readonly foldersService: FolderService,
+    private readonly userService: UserService,
+  ) {}
+
+  @Get()
+  async getAllFolders(@Req() req, @Res() res) {
+    try {
+      const userId = req.user._id;
+      if (!userId) {
+        throw new Error('Invalid UserId');
+      }
+
+      const folders = await this.userService.getAllUserFolders(userId);
+
+      return folders;
+    } catch (error) {
+      console.error('폴더를 불러 오는 중 에러 발생 : ', error);
+      console.log('에러 이름 : ', error.name);
+    }
+  }
+
+  @Put(':folderId')
+  async updateFolderName(
+    @Req() req,
+    @Res() res,
+    @Param('folderId') folderId: string,
+    @Body() updateFolderDto: UpdateFolderDto,
+  ) {
+    try {
+      const userId = req.user._id;
+      if (!userId) {
+        throw new Error('Invalid UserId');
+      }
+
+      await this.userService.updateFolderName(
+        userId,
+        folderId,
+        updateFolderDto,
+      );
+
+      return res.json({ message: 'success' });
+    } catch (error) {
+      console.error('폴더 이름 변경 중 에러 발생 : ', error);
+      console.log('에러 이름 : ', error.name);
+    }
+  }
+
+  @Delete(':folderId')
+  async deleteFolder(
+    @Req() req,
+    @Res() res,
+    @Param('folderId') folderId: string,
+  ) {
+    try {
+      const userId = req.user._id;
+      if (!userId) {
+        throw new Error('Invalid UserId');
+      }
+
+      await this.userService.deleteFolder(userId, folderId);
+
+      return res.json({ message: 'success' });
+    } catch (error) {
+      console.error('폴더 삭제 중 에러 발생 : ', error);
+      console.log('에러 이름 : ', error.name);
+    }
+  }
 
   @Get(':folderId/issues')
   async getFolderWithIssueFiles(@Param('folderId') folderId: string) {
@@ -30,10 +100,8 @@ export class FoldersController {
       const issues = await this.foldersService.getIssuesFromFolder(folderId);
       return issues;
     } catch (error) {
-      console.error(`Failed to get folder with issue files: ${error}`);
-      throw new Error(
-        `Failed to get folder with issue files: ${error.message}`,
-      );
+      console.error('이슈 목록 조회 중 에러 발생 : ', error);
+      console.log('에러 이름 : ', error.name);
     }
   }
 
@@ -43,13 +111,34 @@ export class FoldersController {
     @Res() res: any,
     @Body() updateIssueFileDto: UpdateIssueFileDto,
   ) {
-    await this.foldersService.updateIssueFileName(issueId, updateIssueFileDto);
-    return res.json({ message: 'success' });
+    try {
+      const isUpdatedFolderName = await this.foldersService.updateIssueFileName(
+        issueId,
+        updateIssueFileDto,
+      );
+
+      if (isUpdatedFolderName) {
+        return res.json({ message: 'success' });
+      } else {
+        throw new Error('폴더 이름 변경 중 에러 발생');
+      }
+    } catch (error) {
+      console.log('에러 이름 : ', error.name);
+    }
   }
 
   @Delete('/:folderId/issues/:issueId')
   async deleteIssueFile(@Res() res: any, @Param('issueId') issueId: string) {
-    await this.foldersService.deleteIssueFile(issueId);
-    return res.json({ message: 'success' });
+    try {
+      const isDeletedIssueFile =
+        await this.foldersService.deleteIssueFile(issueId);
+      if (isDeletedIssueFile) {
+        return res.json({ message: 'success' });
+      } else {
+        throw new Error('이슈 파일 삭제 중 에러 발생');
+      }
+    } catch (error) {
+      console.log('에러 이름 : ', error.name);
+    }
   }
 }

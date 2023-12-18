@@ -48,25 +48,37 @@ export class FolderService {
   async updateIssueFileName(
     issueId: string,
     updateIssueFileDto: UpdateIssueFileDto,
-  ): Promise<IssueFile> {
-    const { newIssueName } = updateIssueFileDto;
+  ): Promise<boolean> {
+    try {
+      const { newIssueName } = updateIssueFileDto;
 
-    const issue = await this.issueFileModel.findById(issueId);
+      const issue = await this.issueFileModel.findById(issueId);
 
-    if (!issue) {
-      throw new NotFoundException('Issue File not found');
+      if (!issue) {
+        throw new NotFoundException('Issue File not found');
+      }
+
+      issue.issueName = newIssueName;
+
+      await issue.save();
+
+      return true;
+    } catch (error) {
+      return false;
     }
-
-    issue.issueName = newIssueName;
-
-    return issue.save();
   }
 
-  async deleteIssueFile(issueId: string): Promise<void> {
-    const issueFile = await this.issueFileModel.deleteOne({ _id: issueId });
+  async deleteIssueFile(issueId: string): Promise<boolean> {
+    try {
+      const issueFile = await this.issueFileModel.deleteOne({ _id: issueId });
 
-    if (issueFile.deletedCount === 0) {
-      throw new NotFoundException('Issue not found');
+      if (issueFile.deletedCount === 0) {
+        throw new NotFoundException('Issue not found');
+      }
+
+      return true;
+    } catch (error) {
+      return false;
     }
   }
 }

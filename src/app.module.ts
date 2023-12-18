@@ -20,6 +20,7 @@ import { AuthModule } from './auth/auth.module';
 import { FoldersController } from './folders/folder.controller';
 import { FolderService } from './folders/folder.service';
 import { Folder, FolderSchema } from './models/folders.model';
+import { PreSingedModule } from './preSignedUrl/preSigned.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { Folder, FolderSchema } from './models/folders.model';
     VideoModule,
     S3StorageModule,
     AuthModule,
+    PreSingedModule,
   ],
   controllers: [
     AppController,

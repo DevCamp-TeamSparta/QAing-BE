@@ -20,7 +20,9 @@ export class AuthMiddleware implements NestMiddleware {
     const sameSite = req.headers.host.includes('.qaing.co') ? 'none' : 'lax';
     if (!accessToken && !refreshToken) {
       // 로그인을 하지 않은 상태
-      return res.redirect('https://test.app.qaing.co/auth/signup');
+      res.header('Access-Control-Allow-Origin', 'https://app.qaing.co');
+      res.header('Access-Control-Allow-Credentials', 'true');
+      return res.redirect('https://app.qaing.co/auth/signup');
     }
 
     try {
@@ -58,8 +60,9 @@ export class AuthMiddleware implements NestMiddleware {
           return next();
         } catch (innerError) {
           //refreshtoken 만료시 유저를 로그인 페이지로 리디렉션
-          console.error('Failed to refresh access token:', innerError);
-          return res.redirect('https://test.app.qaing.co/auth/signup');
+          res.header('Access-Control-Allow-Origin', 'https://app.qaing.co');
+          res.header('Access-Control-Allow-Credentials', 'true');
+          return res.redirect('https://app.qaing.co/auth/signup');
         }
       }
     }

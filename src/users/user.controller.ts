@@ -10,38 +10,48 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserDto } from 'src/dto/updateUser.dto';
-import { UpdateFolderDto } from 'src/dto/updateFolder.dto';
-import { Types } from 'mongoose';
 
 @Controller('users')
-// @UseGuards(AuthMiddleware)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Put('preInfo')
-  async updatePreInfo(@Req() req, @Body() updateUserDto: UpdateUserDto) {
-    const userId = req.user.userId
-      ? req.user.userId
-      : new Types.ObjectId(req.user.id);
-    return this.userService.updatePreInfo(userId, updateUserDto);
+  async updatePreInfo(
+    @Req() req,
+    @Res() res,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    try {
+      const userId = req.user._id;
+      const isUpdatedUserInfo = this.userService.updatePreInfo(
+        userId,
+        updateUserDto,
+      );
+
+      if (isUpdatedUserInfo) {
+        return res.json({ message: 'success' });
+      } else {
+        throw new Error('유저 정보 업데이트 중 에러 발생');
+      }
+    } catch (error) {
+      console.log('에러 이름 : ', error.name);
+    }
   }
 
   @Get('info')
   async getUserInfo(@Req() req, @Res() res: any) {
-    const userId = req.user.userId
-      ? req.user.userId
-      : new Types.ObjectId(req.user.id);
-    const findUser = await this.userService.getUserInfo(userId);
-    return res.json(findUser);
-  }
+    try {
+      const userId = req.user._id;
+      if (!userId) {
+        throw new Error('검색된 userId 없음.');
+      }
 
-  @Get('folders')
-  async getAllUserFolders(@Req() req) {
-    const userId = req.user.userId
-      ? req.user.userId
-      : new Types.ObjectId(req.user.id);
-    const folders = await this.userService.getAllUserFolders(userId);
-    return folders;
+      const findUser = await this.userService.getUserInfo(userId);
+      return res.json(findUser);
+    } catch (error) {
+      console.error('유저 정보 조회 중 에러 발생 : ', error);
+      console.log(error.name);
+    }
   }
 
   @Put('profile')
@@ -50,40 +60,17 @@ export class UserController {
     @Res() res,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    const userId = req.user.userId
-      ? req.user.userId
-      : new Types.ObjectId(req.user.id);
-    await this.userService.updateUserProfile(userId, updateUserDto);
+    try {
+      const userId = req.user._id;
+      if (!userId) {
+        throw new Error('검색된 userId 없음.');
+      }
+      await this.userService.updateUserProfile(userId, updateUserDto);
 
-    return res.json({ message: 'success' });
-  }
-
-  @Put('folders/:folderId')
-  async updateFolderName(
-    @Req() req,
-    @Res() res,
-    @Param('folderId') folderId: string,
-    @Body() updateFolderDto: UpdateFolderDto,
-  ) {
-    const userId = req.user.userId
-      ? req.user.userId
-      : new Types.ObjectId(req.user.id);
-    await this.userService.updateFolderName(userId, folderId, updateFolderDto);
-
-    return res.json({ message: 'success' });
-  }
-
-  @Delete('folders/:folderId')
-  async deleteFolder(
-    @Req() req,
-    @Res() res,
-    @Param('folderId') folderId: string,
-  ) {
-    const userId = req.user.userId
-      ? req.user.userId
-      : new Types.ObjectId(req.user.id);
-    await this.userService.deleteFolder(userId, folderId);
-
-    return res.json({ message: 'success' });
+      return res.json({ message: 'success' });
+    } catch (error) {
+      console.error('유저 프로필 업데이트 중 에러 발생 : ', error);
+      console.log('에러 이름 : ', error.name);
+    }
   }
 }

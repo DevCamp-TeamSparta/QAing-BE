@@ -27,15 +27,23 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     profile,
     done: VerifyCallback,
   ): Promise<any> {
-    const { emails, displayName, photos } = profile;
-    const user = {
-      userEmail: emails[0].value,
-      userName: displayName,
-      userProfile: photos[0].value,
-      accessToken,
-      refreshToken,
-    };
-    const userInDB = await this.authService.findOrCreate(user);
-    done(null, userInDB);
+    try {
+      console.log('Received access token:', accessToken);
+      console.log('Received refresh token:', refreshToken);
+      console.log('Received profile:', profile);
+      const { emails, displayName, photos } = profile;
+      const user = {
+        userEmail: emails[0].value,
+        userName: displayName,
+        userProfile: photos[0].value,
+        accessToken,
+        refreshToken,
+      };
+      const userInDB = await this.authService.findOrCreate(user);
+      done(null, userInDB);
+    } catch (error) {
+      console.error('Error during Google authentication:', error);
+      return done(error, false);
+    }
   }
 }

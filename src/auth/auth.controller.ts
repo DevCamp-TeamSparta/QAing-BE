@@ -37,7 +37,7 @@ export class AuthController {
       const user = req.user as User;
 
       // `accessToken`은 생성하지만, `refreshToken`은 Google로부터 받은 것을 사용
-      const accessToken = this.authService.generateJwtToken(user);
+      const accessToken = user.accessToken;
       const refreshToken = user.refreshToken; // Google로부터 받은 refreshToken 사용
       const sameSite = req.headers.host.includes('.qaing.co') ? 'None' : '';
 
@@ -56,7 +56,7 @@ export class AuthController {
         domain: '.qaing.co',
       });
 
-      res.redirect('https://test.app.qaing.co/auth/google/callback');
+      res.redirect('https://app.qaing.co/auth/google/callback');
     } catch (err) {
       console.error('Google authentication failed:', err);
       res
@@ -65,42 +65,42 @@ export class AuthController {
     }
   }
 
-  @Get('refresh')
-  async refreshAccessToken(@Req() req, @Res() res) {
-    try {
-      const sameSite = req.headers.host.includes('.qaing.co') ? 'None' : '';
-      const refreshToken = req.cookies['refresh-token'];
-      if (!refreshToken) {
-        throw new Error('Refresh token not provided');
-      }
+  // @Get('refresh')
+  // async refreshAccessToken(@Req() req, @Res() res) {
+  //   try {
+  //     const sameSite = req.headers.host.includes('.qaing.co') ? 'None' : '';
+  //     const refreshToken = req.cookies['refresh-token'];
+  //     if (!refreshToken) {
+  //       throw new Error('Refresh token not provided');
+  //     }
 
-      const decoded = this.jwtService.verify(
-        refreshToken,
-        this.configService.get('JWT_SECRET'),
-      ) as any;
+  //     const decoded = this.jwtService.verify(
+  //       refreshToken,
+  //       this.configService.get('JWT_SECRET'),
+  //     ) as any;
 
-      const partialUser: Partial<User> = {
-        _id: decoded.userId,
-        userEmail: decoded.email,
-      };
+  //     const partialUser: Partial<User> = {
+  //       _id: decoded.userId,
+  //       userEmail: decoded.email,
+  //     };
 
-      const user = partialUser as User;
+  //     const user = partialUser as User;
 
-      const accessToken = this.authService.generateJwtToken(user);
+  //     const accessToken = this.authService.generateJwtToken(user);
 
-      res.cookie('access-token', accessToken, {
-        sameSite,
-        httpOnly: true,
-        secure: true,
-        domain: '.qaing.co',
-      });
+  //     res.cookie('access-token', accessToken, {
+  //       sameSite,
+  //       httpOnly: true,
+  //       secure: true,
+  //       domain: '.qaing.co',
+  //     });
 
-      res.status(HttpStatus.OK).json({ success: true, accessToken });
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-      res
-        .status(HttpStatus.UNAUTHORIZED)
-        .json({ success: false, message: 'Invalid refresh token' });
-    }
-  }
+  //     res.status(HttpStatus.OK).json({ success: true, accessToken });
+  //   } catch (error) {
+  //     console.error('Token refresh failed:', error);
+  //     res
+  //       .status(HttpStatus.UNAUTHORIZED)
+  //       .json({ success: false, message: 'Invalid refresh token' });
+  //   }
+  // }
 }

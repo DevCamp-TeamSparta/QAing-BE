@@ -24,7 +24,7 @@ export class AuthService {
       user = await this.userModel.create({
         userEmail: userEmail,
         userName: profile.userName,
-        userProfile: profile.userProfile,
+        userProfileImg: profile.userProfile,
         userPhoneNumber: null,
         userJob: null,
         userTeamsize: null,
@@ -40,14 +40,6 @@ export class AuthService {
     return user;
   }
 
-  generateJwtToken(user: User): string {
-    const payload = { userId: user._id, email: user.userEmail };
-    return this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('JWT_SECRET'),
-      expiresIn: '1h',
-    });
-  }
-
   async getNewAccessToken(refreshToken: string): Promise<string> {
     try {
       const response = await axios.post('https://oauth2.googleapis.com/token', {
@@ -58,7 +50,6 @@ export class AuthService {
       });
       return response.data.access_token;
     } catch (error) {
-      console.error('Error refreshing access token:', error);
       throw new Error('Failed to refresh access token');
     }
   }
@@ -75,7 +66,6 @@ export class AuthService {
       );
       return response.data; // 여기서 반환된 사용자 정보
     } catch (error) {
-      console.error('Error retrieving Google user profile:', error);
       throw new Error('Failed to retrieve Google user profile');
     }
   }

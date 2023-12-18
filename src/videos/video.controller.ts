@@ -31,9 +31,20 @@ export class VideoController {
   @Get('process')
   @UseInterceptors(FileInterceptor('webmFile'))
   async createFolder(@Req() req: any, @Res() res: any): Promise<void> {
-    const userId = req.user._id;
-    const folder = await this.videoService.getFolderIdByUser(userId);
-    return res.json({ folderId: folder._id, status: folder.status });
+    try {
+      const userId = req.user._id;
+      console.log('유저 아이디 : ', userId);
+      if (!userId) {
+        throw new Error('유저를 찾을 수 없음');
+      }
+
+      const folder = await this.videoService.getFolderIdByUser(userId);
+      console.log('폴더 생성');
+      return res.json({ folderId: folder._id, status: folder.status });
+    } catch (error) {
+      console.log('에러 이름 : ', error.name);
+      return res.json({ message: 'failure' });
+    }
   }
 
   @Put('process/:folderId')
@@ -45,16 +56,25 @@ export class VideoController {
     @Req() req: any,
     @Res() res: any,
   ): Promise<void> {
-    const parsedTimestamps = JSON.parse(timestamps);
-    console.log('녹화 중인 유저 : ', req.user);
-    const userId = req.user._id;
-    await this.videoService.processVideoAndImages(
-      webmFile,
-      parsedTimestamps,
-      userId,
-      folderId,
-    );
-    return res.json({ message: 'success' });
+    try {
+      const parsedTimestamps = JSON.parse(timestamps);
+      const userId = req.user._id;
+      console.log('원본 파일 : ', webmFile);
+      console.log('타임 스탬프 : ', timestamps);
+
+      if (!userId) {
+        throw new Error('유저를 찾을 수 없음.');
+      }
+      await this.videoService.processVideoAndImages(
+        webmFile,
+        parsedTimestamps,
+        folderId,
+      );
+      return res.json({ message: 'success' });
+    } catch (error) {
+      console.log('에러 이름 : ', error.name);
+      return res.json({ message: 'failure' });
+    }
   }
 
   @Get('subscribe/:folderId')
