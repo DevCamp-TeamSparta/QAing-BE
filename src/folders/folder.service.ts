@@ -42,7 +42,9 @@ export class FolderService {
         issuesWithContents.push(issue);
       }
     }
-    return issuesWithContents;
+
+    const { folderName } = folder;
+    return { folderName, issuesWithContents };
   }
 
   async updateIssueFileName(

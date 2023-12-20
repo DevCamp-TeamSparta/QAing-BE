@@ -21,6 +21,7 @@ import { FoldersController } from './folders/folder.controller';
 import { FolderService } from './folders/folder.service';
 import { Folder, FolderSchema } from './models/folders.model';
 import { PreSingedModule } from './preSignedUrl/preSigned.module';
+import { FolderModule } from './folders/folder.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { PreSingedModule } from './preSignedUrl/preSigned.module';
     S3StorageModule,
     AuthModule,
     PreSingedModule,
+    FolderModule,
   ],
   controllers: [
     AppController,

@@ -19,8 +19,6 @@ import * as multerS3 from 'multer-s3';
             secretAccessKey: configService.get('AWS_S3_SECRET_ACCESS_KEY'),
           },
         });
-
-        console.log(configService.get('AWS_S3_BUCKET'));
         return {
           storage: multerS3({
             s3,

@@ -16,6 +16,15 @@ export class Folder extends Document {
 
   @Prop()
   status: boolean;
+
+  @Prop({ default: 0 })
+  totalTasks: number;
+
+  @Prop({ default: 0 })
+  completedTasks: number;
+
+  @Prop()
+  progress: string;
 }
 
 export const FolderSchema = SchemaFactory.createForClass(Folder);

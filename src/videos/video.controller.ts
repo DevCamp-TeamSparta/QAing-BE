@@ -39,8 +39,11 @@ export class VideoController {
       }
 
       const folder = await this.videoService.getFolderIdByUser(userId);
-      console.log('폴더 생성');
-      return res.json({ folderId: folder._id, status: folder.status });
+      return res.json({
+        folderId: folder._id,
+        status: folder.status,
+        folderName: folder.folderName,
+      });
     } catch (error) {
       console.log('에러 이름 : ', error.name);
       return res.json({ message: 'failure' });
@@ -88,8 +91,32 @@ export class VideoController {
       Connection: 'keep-alive',
     });
 
+    res.header('Access-Control-Allow-Origin', 'https://app.qaing.co');
+    res.header('Access-Control-Allow-Credentials', 'true');
+
     this.videoService.subscribeToFolderUpdates(folderId, (folder: Folder) => {
-      res.write(`data: ${JSON.stringify({ message: 'success' })}\n\n`);
+      if (folder.status) {
+        // Folder 상태 업데이트 시 메시지 전송
+        res.write(
+          `data: ${JSON.stringify({
+            type: 'message',
+            message: '이슈 파일 저장 성공',
+            progress: folder.progress,
+            totalTasks: folder.totalTasks,
+            status: true,
+          })}\n\n`,
+        );
+      } else {
+        // Folder 진행 상태 업데이트
+        res.write(
+          `data: ${JSON.stringify({
+            type: 'progress',
+            progress: folder.progress,
+            totalTasks: folder.totalTasks,
+            status: false,
+          })}\n\n`,
+        );
+      }
     });
   }
 }

@@ -49,6 +49,7 @@ export class VideoService {
         }:${nowDate.getMinutes()}`,
         issues: [],
         status: false,
+        totalTasks: 0,
       });
 
       await folder.save();
@@ -71,19 +72,23 @@ export class VideoService {
     const tempWebmFilePath = path.join(__dirname, `${folderId}_temp.webm`);
 
     await this.writeTemporaryFile(webmFile.buffer, tempWebmFilePath);
-
     if (timestamps.length === 0) {
       console.log('타임 스탬프 배열 비어있음.');
       return;
     }
 
-    try {
-      const folder = await this.folderModel.findById(folderId);
+    const folder = await this.folderModel.findById(folderId);
+    const totalTasks = timestamps.length;
 
+    let completedTasks: number = 0;
+    let issueNum: number = 1;
+    let updatedProgress: number;
+
+    this.notifyFolderProgress(folderId, completedTasks, totalTasks);
+
+    try {
       try {
-        let issueNum: number = 1;
         for (const timestamp of timestamps) {
-          console.log(`${timestamp}초 이슈 파일 생성 중`);
           const hashedImageName = `${this.hashString(
             `image_${folderId}_${issueNum}`,
           )}.jpg`;
@@ -107,7 +112,6 @@ export class VideoService {
             'video',
           );
           console.log(`${issueNum}번 비디오 편집 및 s3업로드 완료`);
-
           const createdIssueFile = await this.saveMediaUrlsToMongoDB(
             imageUrl,
             videoUrl,
@@ -115,6 +119,12 @@ export class VideoService {
           );
           console.log(`${issueNum}번 이미지 및 비디오 몽고db에 저장 완료`);
           folder.issues.push(createdIssueFile._id);
+
+          completedTasks++;
+          //const progress = Math.floor((completedTasks / totalTasks) * 100);
+          this.notifyFolderProgress(folderId, completedTasks, totalTasks);
+
+          // updatedProgress = progress;
           issueNum += 1;
         }
       } catch (error) {
@@ -122,12 +132,17 @@ export class VideoService {
         throw error;
       }
 
-      if (folder.issues.length == timestamps.length) {
+      if (folder.issues.length == totalTasks) {
         folder.status = true;
         this.notifyFolderUpdate(folderId, folder);
       } else {
         throw new Error('이슈 생성 중 에러 발생.');
       }
+
+      folder.totalTasks = totalTasks;
+      folder.completedTasks = completedTasks;
+      // folder.progress = `${updatedProgress}%`;
+      // folder.progress = totalTasks
 
       await folder.save();
       console.log('이미지 및 비디오 생성 완료!');
@@ -139,6 +154,7 @@ export class VideoService {
       return;
     }
   }
+
   private async writeTemporaryFile(
     buffer: Buffer,
     filePath: string,
@@ -148,20 +164,6 @@ export class VideoService {
     } catch (error) {
       console.error('임시 파일 쓰기 에러:', error);
       throw error;
-    }
-  }
-
-  subscribeToFolderUpdates(folderId: string, callback: Function) {
-    if (!this.folderUpdateSubscribers.has(folderId)) {
-      this.folderUpdateSubscribers.set(folderId, []);
-    }
-    this.folderUpdateSubscribers.get(folderId).push(callback);
-  }
-
-  private notifyFolderUpdate(folderId: string, folder: Folder) {
-    const subscribers = this.folderUpdateSubscribers.get(folderId);
-    if (subscribers) {
-      subscribers.forEach((callback) => callback(folder));
     }
   }
 
@@ -276,5 +278,32 @@ export class VideoService {
 
   private hashString(input: string): string {
     return crypto.createHash('sha256').update(input).digest('hex');
+  }
+
+  subscribeToFolderUpdates(folderId: string, callback: Function) {
+    if (!this.folderUpdateSubscribers.has(folderId)) {
+      this.folderUpdateSubscribers.set(folderId, []);
+    }
+    this.folderUpdateSubscribers.get(folderId).push(callback);
+  }
+
+  private notifyFolderUpdate(folderId: string, folder: Folder) {
+    const subscribers = this.folderUpdateSubscribers.get(folderId);
+    if (subscribers) {
+      subscribers.forEach((callback) => callback(folder));
+      console.log('///////////이슈 파일 FE로 전송 성공///////////');
+    }
+  }
+
+  private notifyFolderProgress(
+    folderId: string,
+    progress: number,
+    totalTasks: number,
+  ) {
+    const subscribers = this.folderUpdateSubscribers.get(folderId);
+    if (subscribers) {
+      console.log('///////////이슈 파일 Progress 전송///////////');
+      subscribers.forEach((callback) => callback({ progress, totalTasks }));
+    }
   }
 }
