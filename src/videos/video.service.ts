@@ -5,7 +5,11 @@ import { IssueFile } from 'src/models/issueFiles.model';
 import { Folder } from 'src/models/folders.model';
 import * as fs from 'fs';
 import * as path from 'path';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -37,16 +41,21 @@ export class VideoService {
     });
   }
 
+  private formatToTwoDigits(number: number): string {
+    return number.toString().padStart(2, '0');
+  }
+
   async getFolderIdByUser(userId: string) {
     try {
       const user = await this.userModel.findById(userId);
       const nowDate = new Date();
+      const folderName = `${nowDate.getFullYear()}-${this.formatToTwoDigits(
+        nowDate.getMonth() + 1,
+      )}-${this.formatToTwoDigits(nowDate.getDate())} ${this.formatToTwoDigits(
+        nowDate.getHours(),
+      )}:${this.formatToTwoDigits(nowDate.getMinutes())}`;
       const folder = new this.folderModel({
-        folderName: `${nowDate.getFullYear()}-${
-          nowDate.getMonth() + 1
-        }-${nowDate.getDate()} ${
-          nowDate.getHours() + 9
-        }:${nowDate.getMinutes()}`,
+        folderName,
         issues: [],
         status: false,
         totalTasks: 0,
@@ -125,7 +134,7 @@ export class VideoService {
           this.notifyFolderProgress(folderId, completedTasks, totalTasks);
 
           // updatedProgress = progress;
-          issueNum += 1;
+          issueNum++;
         }
       } catch (error) {
         console.log('파일 편집 중 에러 발생 : ', error);
@@ -181,7 +190,7 @@ export class VideoService {
         ? `ffmpeg -ss ${timestamp} -i ${webmFilePath} -vframes 1 -q:v 2 ${outputPath}`
         : `ffmpeg -ss ${
             timestamp - 10
-          } -i ${webmFilePath} -t 20 -c:v libx264 -preset ultrafast -b:v 600k -r 30 -c:a aac ${outputPath}
+          } -i ${webmFilePath} -t 20 -c:v libx264 -preset superfast -b:v 600k -r 30 -c:a aac ${outputPath}
       `;
 
     if (mediaType == 'video') {
@@ -198,6 +207,21 @@ export class VideoService {
       return `https://static.qaing.co/${hashedFileName}`;
     } catch (error) {
       console.error(`${mediaType} 생성 중 오류 발생:`, error);
+      throw error;
+    }
+  }
+
+  async deleteFromS3(hashedFileName: string): Promise<void> {
+    const deleteParams = {
+      Bucket: this.configService.get('AWS_S3_BUCKET'),
+      Key: hashedFileName, // S3에서 삭제할 파일의 Key
+    };
+
+    try {
+      await this.s3Client.send(new DeleteObjectCommand(deleteParams));
+      console.log(`File ${hashedFileName} deleted successfully from S3`);
+    } catch (error) {
+      console.error(`Error in deleting file ${hashedFileName} from S3:`, error);
       throw error;
     }
   }

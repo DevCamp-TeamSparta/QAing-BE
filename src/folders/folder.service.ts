@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Folder } from 'src/models/folders.model';
 import { IssueFile } from 'src/models/issueFiles.model';
 import { UpdateIssueFileDto } from 'src/dto/updateIssueFile.dto';
+import { VideoService } from 'src/videos/video.service';
 
 @Injectable()
 export class FolderService {
@@ -11,6 +12,7 @@ export class FolderService {
     @InjectModel(Folder.name) private readonly folderModel: Model<Folder>,
     @InjectModel(IssueFile.name)
     private readonly issueFileModel: Model<IssueFile>,
+    private readonly videoService: VideoService,
   ) {}
 
   async getFolderById(folderId: string): Promise<Folder | null> {
@@ -80,12 +82,30 @@ export class FolderService {
         throw new NotFoundException('Folder not found');
       }
 
-      // issueFile을 삭제합니다.
-      const issueFile = await this.issueFileModel.deleteOne({ _id: issueId });
-      if (issueFile.deletedCount === 0) {
+      // 데이터베이스에서 이슈 파일을 찾고
+      const issueFile = await this.issueFileModel.findById(issueId);
+      if (!issueFile) {
         throw new NotFoundException('Issue not found');
       }
 
+      // S3에서 이미지와 비디오 파일 삭제
+      if (issueFile.imageUrl) {
+        const imageName = issueFile.imageUrl.split('/').pop(); // URL에서 파일 이름 추출
+        if (imageName) {
+          await this.videoService.deleteFromS3(imageName);
+        }
+      }
+      if (issueFile.videoUrl) {
+        const videoName = issueFile.videoUrl.split('/').pop(); // URL에서 파일 이름 추출
+        if (videoName) {
+          await this.videoService.deleteFromS3(videoName);
+        }
+      }
+
+      // 데이터베이스에서 이슈 파일 삭제
+      await this.issueFileModel.deleteOne({ _id: issueId });
+
+      // 폴더에서 해당 issueId를 제거
       folder.issues = folder.issues.filter((id) => id.toString() !== issueId);
 
       await folder.save();

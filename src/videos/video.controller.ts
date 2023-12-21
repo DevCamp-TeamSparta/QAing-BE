@@ -91,7 +91,7 @@ export class VideoController {
       Connection: 'keep-alive',
     });
 
-    res.header('Access-Control-Allow-Origin', 'https://app.qaing.co');
+    res.header('Access-Control-Allow-Origin', process.env.PROD_REDIRECT_FE_URL);
     res.header('Access-Control-Allow-Credentials', 'true');
 
     this.videoService.subscribeToFolderUpdates(folderId, (folder: Folder) => {

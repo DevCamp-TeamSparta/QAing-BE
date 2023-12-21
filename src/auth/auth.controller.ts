@@ -56,7 +56,7 @@ export class AuthController {
         domain: '.qaing.co',
       });
 
-      res.redirect('https://app.qaing.co/auth/google/callback');
+      res.redirect(`${process.env.PROD_REDIRECT_FE_URL}/auth/google/callback`);
     } catch (err) {
       console.error('Google authentication failed:', err);
       res
