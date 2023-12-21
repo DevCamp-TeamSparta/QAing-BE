@@ -130,15 +130,15 @@ export class FoldersController {
   }
 
   @Delete('/:folderId/issues/:issueId')
-  async deleteIssueFile(@Res() res: any, @Param('issueId') issueId: string) {
+  async deleteIssueFile(
+    @Res() res: any,
+    @Param('issueId') issueId: string,
+    @Param('folderId') folderId: string,
+  ) {
     try {
-      const isDeletedIssueFile =
-        await this.foldersService.deleteIssueFile(issueId);
-      if (isDeletedIssueFile) {
-        return res.json({ message: 'success' });
-      } else {
-        throw new Error('이슈 파일 삭제 중 에러 발생');
-      }
+      await this.foldersService.deleteIssueFile(folderId, issueId);
+
+      return res.json({ message: 'success' });
     } catch (error) {
       console.log('에러 이름 : ', error.name);
     }

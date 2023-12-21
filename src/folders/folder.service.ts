@@ -70,17 +70,30 @@ export class FolderService {
     }
   }
 
-  async deleteIssueFile(issueId: string): Promise<boolean> {
+  async deleteIssueFile(
+    folderId: string,
+    issueId: string,
+  ): Promise<Folder | null> {
     try {
-      const issueFile = await this.issueFileModel.deleteOne({ _id: issueId });
+      const folder = await this.folderModel.findOne({ _id: folderId });
+      if (!folder) {
+        throw new NotFoundException('Folder not found');
+      }
 
+      // issueFile을 삭제합니다.
+      const issueFile = await this.issueFileModel.deleteOne({ _id: issueId });
       if (issueFile.deletedCount === 0) {
         throw new NotFoundException('Issue not found');
       }
 
-      return true;
+      folder.issues = folder.issues.filter((id) => id.toString() !== issueId);
+
+      await folder.save();
+
+      return folder;
     } catch (error) {
-      return false;
+      console.error(`Failed to delete issue file: ${error}`);
+      throw new Error(`Failed to delete issue file: ${error.message}`);
     }
   }
 }
