@@ -48,12 +48,14 @@ export class VideoService {
   async getFolderIdByUser(userId: string) {
     try {
       const user = await this.userModel.findById(userId);
-      const nowDate = new Date();
-      const folderName = `${nowDate.getFullYear()}-${this.formatToTwoDigits(
-        nowDate.getMonth() + 1,
-      )}-${this.formatToTwoDigits(nowDate.getDate())} ${this.formatToTwoDigits(
-        nowDate.getHours(),
-      )}:${this.formatToTwoDigits(nowDate.getMinutes())}`;
+      const kstDate = new Date();
+      kstDate.setTime(kstDate.getTime() + 9 * 60 * 60 * 1000);
+      const folderName = `${kstDate.getFullYear()}-${this.formatToTwoDigits(
+        kstDate.getMonth() + 1,
+      )}-${this.formatToTwoDigits(kstDate.getDate())} ${this.formatToTwoDigits(
+        kstDate.getHours(),
+      )}:${this.formatToTwoDigits(kstDate.getMinutes())}`;
+
       const folder = new this.folderModel({
         folderName,
         issues: [],
