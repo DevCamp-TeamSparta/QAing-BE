@@ -8,7 +8,7 @@ export class AppController {
 
   @Get()
   home() {
-    return 'Production Server(Feat.Docker123456789)';
+    return 'Production Server(Feat.Docker12345678900000)';
   }
 
   @Get('health-check')
