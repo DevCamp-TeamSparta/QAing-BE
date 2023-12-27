@@ -14,7 +14,7 @@ RUN npm install
 COPY . .
 
 # Creates a "dist" folder with the production build
-RUN npm run build
+RUN npm run start
 
 # Start the server using the production build
 CMD [ "node", "dist/main.js" ]
