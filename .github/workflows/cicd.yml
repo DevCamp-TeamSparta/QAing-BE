@@ -45,8 +45,8 @@ jobs:
           script: |
             cd qaing-server
             docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password ${{ secrets.DOCKERHUB_PASSWORD }}
+            docker rm -f server || true
             docker system prune -a --volumes -f
-            docker compose down
             docker compose pull -q
             docker compose up --force-recreate --build -d --quiet-pull 2>log.out
             cat log.out
