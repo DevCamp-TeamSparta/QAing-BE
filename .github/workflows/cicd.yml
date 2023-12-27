@@ -29,7 +29,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: hwann2/qaing-be-prod:latest
+          tags: hwann/qaing-be-prod:latest
 
   deploy:
     needs: build
