@@ -8,7 +8,7 @@ export class AppController {
 
   @Get()
   home() {
-    return 'Production Server(도커이미지 수정)';
+    return 'Production Server(도커이미지 수정v2)';
   }
 
   @Get('health-check')
