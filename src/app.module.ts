@@ -22,6 +22,7 @@ import { FolderService } from './folders/folder.service';
 import { Folder, FolderSchema } from './models/folders.model';
 import { PreSingedModule } from './preSignedUrl/preSigned.module';
 import { FolderModule } from './folders/folder.module';
+import { EmailService } from './email/email.service';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { FolderModule } from './folders/folder.module';
     VideoService,
     FolderService,
     ConfigService,
+    EmailService,
   ],
 })
 export class AppModule {}

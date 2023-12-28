@@ -7,6 +7,7 @@ import { User } from 'src/models/users.model';
 import { Model } from 'mongoose';
 import axios from 'axios';
 import * as jwt from 'jsonwebtoken';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +16,7 @@ export class AuthService {
     @InjectModel(User.name)
     private userModel: Model<User>,
     private readonly configService: ConfigService,
+    private emailService: EmailService,
   ) {}
 
   async findOrCreate(profile: any): Promise<User> {
@@ -36,7 +38,10 @@ export class AuthService {
       user.refreshToken = profile.refreshToken;
     }
     await user.save();
-    console.log('로그인한 유저 : ', user);
+
+    if (user.userPhoneNumber == null) {
+      await this.emailService.sendWelcomeEmail(user.userEmail, user.userName);
+    }
     return user;
   }
 

@@ -70,7 +70,6 @@ export class VideoService {
 
       return folder;
     } catch (error) {
-      console.log('에러 이름 : ', error);
       throw error;
     }
   }
@@ -83,10 +82,7 @@ export class VideoService {
     const tempWebmFilePath = path.join(__dirname, `${folderId}_temp.webm`);
 
     await this.writeTemporaryFile(webmFile.buffer, tempWebmFilePath);
-    if (timestamps.length === 0) {
-      console.log('타임 스탬프 배열 비어있음.');
-      return;
-    }
+    if (timestamps.length === 0) return;
 
     const folder = await this.folderModel.findById(folderId);
     const totalTasks = timestamps.length;
@@ -106,7 +102,6 @@ export class VideoService {
           const hashedVideoName = `${this.hashString(
             `video_${folderId}_${issueNum}`,
           )}.mp4`;
-          console.log(`${issueNum}번 이미지 및 비디오 이름 해싱 완료`);
 
           // 이미지와 비디오 처리
           const imageUrl = await this.processMedia(
@@ -115,20 +110,17 @@ export class VideoService {
             hashedImageName,
             'image',
           );
-          console.log(`${issueNum}번 이미지 편집 및 s3업로드 완료`);
           const videoUrl = await this.processMedia(
             tempWebmFilePath,
             timestamp,
             hashedVideoName,
             'video',
           );
-          console.log(`${issueNum}번 비디오 편집 및 s3업로드 완료`);
           const createdIssueFile = await this.saveMediaUrlsToMongoDB(
             imageUrl,
             videoUrl,
             issueNum,
           );
-          console.log(`${issueNum}번 이미지 및 비디오 몽고db에 저장 완료`);
           folder.issues.push(createdIssueFile._id);
 
           completedTasks++;
@@ -139,7 +131,6 @@ export class VideoService {
           issueNum++;
         }
       } catch (error) {
-        console.log('파일 편집 중 에러 발생 : ', error);
         throw error;
       }
 
@@ -156,9 +147,7 @@ export class VideoService {
       // folder.progress = totalTasks
 
       await folder.save();
-      console.log('이미지 및 비디오 생성 완료!');
     } catch (err) {
-      console.log('파일 생성 중 에러 발생 : ', err.name);
       return;
     } finally {
       await this.deleteFile(tempWebmFilePath);
@@ -173,7 +162,6 @@ export class VideoService {
     try {
       await fs.promises.writeFile(filePath, buffer, { flag: 'w' });
     } catch (error) {
-      console.error('임시 파일 쓰기 에러:', error);
       throw error;
     }
   }
@@ -186,7 +174,6 @@ export class VideoService {
     mediaType: 'image' | 'video',
   ): Promise<string> {
     const outputPath = path.join(__dirname, hashedFileName);
-    console.log('파일저장 경로 : ', outputPath);
     const command =
       mediaType === 'image'
         ? `ffmpeg -ss ${timestamp} -i ${webmFilePath} -vframes 1 -q:v 2 ${outputPath}`
@@ -195,16 +182,8 @@ export class VideoService {
           } -i ${webmFilePath} -t 20 -c:v libx264 -preset superfast -b:v 600k -r 30 -c:a aac ${outputPath}
       `;
 
-    if (mediaType == 'video') {
-      console.log('비디오 파일 cli 실행');
-    }
     try {
       await execAsync(command);
-
-      if (mediaType == 'video') {
-        console.log('비디오 파일 cli 실행 완료 ');
-      }
-
       await this.uploadToS3(outputPath, hashedFileName); // 해시된 파일명을 전달
       return `https://static.qaing.co/${hashedFileName}`;
     } catch (error) {
@@ -317,7 +296,6 @@ export class VideoService {
     const subscribers = this.folderUpdateSubscribers.get(folderId);
     if (subscribers) {
       subscribers.forEach((callback) => callback(folder));
-      console.log('///////////이슈 파일 FE로 전송 성공///////////');
     }
   }
 
@@ -328,7 +306,6 @@ export class VideoService {
   ) {
     const subscribers = this.folderUpdateSubscribers.get(folderId);
     if (subscribers) {
-      console.log('///////////이슈 파일 Progress 전송///////////');
       subscribers.forEach((callback) => callback({ progress, totalTasks }));
     }
   }

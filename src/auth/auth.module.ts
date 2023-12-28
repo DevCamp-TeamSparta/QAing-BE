@@ -14,6 +14,7 @@ import { AppService } from 'src/app.service';
 import { Folder, FolderSchema } from 'src/models/folders.model';
 import { IssueFile, IssueFileSchema } from 'src/models/issueFiles.model';
 import { VideoService } from 'src/videos/video.service';
+import { EmailService } from 'src/email/email.service';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { VideoService } from 'src/videos/video.service';
     AppService,
     UserService,
     VideoService,
+    EmailService,
   ],
 })
 export class AuthModule {}

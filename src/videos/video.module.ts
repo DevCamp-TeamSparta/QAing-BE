@@ -10,6 +10,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { Folder, FolderSchema } from 'src/models/folders.model';
 import { UserService } from 'src/users/user.service';
+import { EmailService } from 'src/email/email.service';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { UserService } from 'src/users/user.service';
     AuthService,
     JwtService,
     UserService,
+    EmailService,
   ],
   exports: [VideoService],
 })

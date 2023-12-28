@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Post, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Post, Req, Res } from '@nestjs/common';
 import { PresignedService } from './preSigned.service';
 
 @Controller('presignedurl')
@@ -30,5 +30,18 @@ export class PresignurlController {
   ): Promise<{ url: string }> {
     const url = await this.presignedService.getDeletePresignedUrl(filename);
     return res.json({ url });
+  }
+
+  @Post('/s3bucket')
+  async fileUploadedUrl(
+    @Req() req: any,
+    @Res() res: any,
+    @Body('filename') filename: string,
+    @Body('type') type: string,
+  ) {
+    const userId = req.user._id;
+    const fileUrl = this.presignedService.constructFileUrl(filename, type);
+    await this.presignedService.updateUserFile(userId, fileUrl);
+    return res.json({ message: 'success', fileUrl });
   }
 }

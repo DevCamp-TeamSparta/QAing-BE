@@ -10,6 +10,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { AuthMiddleware } from 'src/auth/auth.middleware';
 import { IssueFile, IssueFileSchema } from 'src/models/issueFiles.model';
 import { VideoService } from 'src/videos/video.service';
+import { EmailService } from 'src/email/email.service';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { VideoService } from 'src/videos/video.service';
     JwtService,
     ConfigService,
     VideoService,
+    EmailService,
   ],
 })
 export class UserModule implements NestModule {

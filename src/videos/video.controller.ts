@@ -33,7 +33,6 @@ export class VideoController {
   async createFolder(@Req() req: any, @Res() res: any): Promise<void> {
     try {
       const userId = req.user._id;
-      console.log('유저 아이디 : ', userId);
       if (!userId) {
         throw new Error('유저를 찾을 수 없음');
       }
@@ -62,8 +61,6 @@ export class VideoController {
     try {
       const parsedTimestamps = JSON.parse(timestamps);
       const userId = req.user._id;
-      console.log('원본 파일 : ', webmFile);
-      console.log('타임 스탬프 : ', timestamps);
 
       if (!userId) {
         throw new Error('유저를 찾을 수 없음.');
