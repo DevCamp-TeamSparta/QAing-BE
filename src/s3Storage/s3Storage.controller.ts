@@ -33,11 +33,9 @@ export class S3StorageController {
       },
     });
 
-    const result = await s3.deleteObject({
+    await s3.deleteObject({
       Bucket: this.configService.get('AWS_S3_BUCKET'),
       Key: key,
     });
-
-    console.log(result);
   }
 }

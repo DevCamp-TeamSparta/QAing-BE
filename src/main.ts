@@ -13,7 +13,6 @@ async function bootstrap() {
 
   await app.listen(8080, () =>
     setInterval(
-      // 테스트 커밋
       () => console.log('Production : Nest.JS Server started on 8080'),
       5000,
     ),

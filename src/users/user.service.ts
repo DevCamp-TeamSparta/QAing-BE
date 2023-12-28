@@ -90,39 +90,31 @@ export class UserService {
   }
 
   async deleteFolder(userId: string, folderId: string): Promise<void> {
-    // 폴더와 관련된 모든 이슈 파일을 찾음
     const folder = await this.folderModel.findById(folderId).populate('issues');
-    console.log('폴더', folder);
 
     if (!folder) {
       throw new NotFoundException('Folder not found');
     }
 
-    // 각 이슈 파일에 대해 반복
     for (const issueFileId of folder.issues) {
       const issueFile = await this.issueFileModel.findById(issueFileId);
 
-      // S3에서 이미지와 비디오 파일 삭제
       if (issueFile.imageUrl) {
-        const imageName = issueFile.imageUrl.split('/').pop(); // URL에서 파일 이름 추출
-        console.log('삭제하는 이미지 이름 : ', imageName);
+        const imageName = issueFile.imageUrl.split('/').pop();
         if (imageName) {
           await this.videoService.deleteFromS3(imageName);
         }
       }
       if (issueFile.videoUrl) {
-        const videoName = issueFile.videoUrl.split('/').pop(); // URL에서 파일 이름 추출
-        console.log('삭제하는 비디오 이름 : ', videoName);
+        const videoName = issueFile.videoUrl.split('/').pop();
         if (videoName) {
           await this.videoService.deleteFromS3(videoName);
         }
       }
 
-      // 이슈 파일을 데이터베이스에서 삭제
       await this.issueFileModel.deleteOne({ _id: issueFile._id });
     }
 
-    // 폴더 삭제
     await this.folderModel.deleteOne({ _id: folderId });
     await this.userModel.updateOne(
       { _id: userId },

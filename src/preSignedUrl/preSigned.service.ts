@@ -28,14 +28,18 @@ export class PresignedService {
   }
 
   async getUploadPresignedUrl(filename: string, type: string): Promise<string> {
-    const client = this.createS3Client();
-    const command = new PutObjectCommand({
-      Bucket: this.configService.get('AWS_S3_BUCKET'),
-      Key: filename,
-      ContentType: type,
-    });
+    try {
+      const client = this.createS3Client();
+      const command = new PutObjectCommand({
+        Bucket: this.configService.get('AWS_S3_BUCKET'),
+        Key: filename,
+        ContentType: type,
+      });
 
-    return getSignedUrl(client, command);
+      return getSignedUrl(client, command);
+    } catch {
+      throw new Error('presignedUrl 생성 중 에러 발생');
+    }
   }
 
   async getDeletePresignedUrl(filename: string): Promise<string> {
@@ -48,14 +52,11 @@ export class PresignedService {
     return getSignedUrl(client, command);
   }
 
-  constructFileUrl(filename: string, type: string): string {
-    // const bucketName = this.configService.get('AWS_S3_BUCKET');
-    return `https://static.qaing.co/${filename}.${type}`;
+  constructFileUrl(filename: string): string {
+    return `https://static.qaing.co/${filename}`;
   }
 
   async updateUserFile(userId: string, fileUrl: string): Promise<void> {
-    // DB 업데이트 로직
-    // 예를 들어, Mongoose를 사용하는 경우:
     await this.userModel.findByIdAndUpdate(userId, { userProfileImg: fileUrl });
   }
 }

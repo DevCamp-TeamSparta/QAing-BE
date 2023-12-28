@@ -27,15 +27,14 @@ export class FoldersController {
     try {
       const userId = req.user._id;
       if (!userId) {
-        throw new Error('Invalid UserId');
+        return res.status(404).json({ message: 'fail' });
       }
 
       const folders = await this.userService.getAllUserFolders(userId);
 
       return res.json(folders);
     } catch (error) {
-      console.error('폴더를 불러 오는 중 에러 발생 : ', error);
-      console.log('에러 이름 : ', error.name);
+      return res.status(404).json({ message: 'fail' });
     }
   }
 
@@ -49,7 +48,7 @@ export class FoldersController {
     try {
       const userId = req.user._id;
       if (!userId) {
-        throw new Error('Invalid UserId');
+        return res.status(404).json({ message: 'fail' });
       }
 
       await this.userService.updateFolderName(
@@ -60,8 +59,7 @@ export class FoldersController {
 
       return res.json({ message: 'success' });
     } catch (error) {
-      console.error('폴더 이름 변경 중 에러 발생 : ', error);
-      console.log('에러 이름 : ', error.name);
+      return res.status(404).json({ message: 'fail' });
     }
   }
 
@@ -74,15 +72,14 @@ export class FoldersController {
     try {
       const userId = req.user._id;
       if (!userId) {
-        throw new Error('Invalid UserId');
+        return res.status(404).json({ message: 'fail' });
       }
 
       await this.userService.deleteFolder(userId, folderId);
 
       return res.json({ message: 'success' });
     } catch (error) {
-      console.error('폴더 삭제 중 에러 발생 : ', error);
-      console.log('에러 이름 : ', error.name);
+      return res.status(404).json({ message: 'fail' });
     }
   }
 
@@ -95,15 +92,14 @@ export class FoldersController {
       const isValidObjectId = Types.ObjectId.isValid(folderId);
 
       if (!isValidObjectId) {
-        throw new Error('Invalid folderId');
+        return res.status(404).json({ message: 'fail' });
       }
 
       const issuesWithFolder =
         await this.foldersService.getIssuesFromFolder(folderId);
       return res.json(issuesWithFolder);
     } catch (error) {
-      console.error('이슈 목록 조회 중 에러 발생 : ', error);
-      console.log('에러 이름 : ', error.name);
+      return res.status(404).json({ message: 'fail' });
     }
   }
 
@@ -122,10 +118,10 @@ export class FoldersController {
       if (isUpdatedFolderName) {
         return res.json({ message: 'success' });
       } else {
-        throw new Error('폴더 이름 변경 중 에러 발생');
+        return res.status(404).json({ message: 'fail' });
       }
     } catch (error) {
-      console.log('에러 이름 : ', error.name);
+      return res.status(404).json({ message: 'fail' });
     }
   }
 
@@ -140,7 +136,7 @@ export class FoldersController {
 
       return res.json({ message: 'success' });
     } catch (error) {
-      console.log('에러 이름 : ', error.name);
+      return res.status(404).json({ message: 'fail' });
     }
   }
 }

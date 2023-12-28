@@ -89,7 +89,6 @@ export class VideoService {
 
     let completedTasks: number = 0;
     let issueNum: number = 1;
-    let updatedProgress: number;
 
     this.notifyFolderProgress(folderId, completedTasks, totalTasks);
 
@@ -103,7 +102,6 @@ export class VideoService {
             `video_${folderId}_${issueNum}`,
           )}.mp4`;
 
-          // 이미지와 비디오 처리
           const imageUrl = await this.processMedia(
             tempWebmFilePath,
             timestamp,
@@ -124,10 +122,7 @@ export class VideoService {
           folder.issues.push(createdIssueFile._id);
 
           completedTasks++;
-          //const progress = Math.floor((completedTasks / totalTasks) * 100);
           this.notifyFolderProgress(folderId, completedTasks, totalTasks);
-
-          // updatedProgress = progress;
           issueNum++;
         }
       } catch (error) {
@@ -143,8 +138,6 @@ export class VideoService {
 
       folder.totalTasks = totalTasks;
       folder.completedTasks = completedTasks;
-      // folder.progress = `${updatedProgress}%`;
-      // folder.progress = totalTasks
 
       await folder.save();
     } catch (err) {
@@ -195,12 +188,12 @@ export class VideoService {
   async deleteFromS3(hashedFileName: string): Promise<void> {
     const deleteParams = {
       Bucket: this.configService.get('AWS_S3_BUCKET'),
-      Key: hashedFileName, // S3에서 삭제할 파일의 Key
+      Key: hashedFileName,
     };
 
     try {
       await this.s3Client.send(new DeleteObjectCommand(deleteParams));
-      console.log(`File ${hashedFileName} deleted successfully from S3`);
+      return;
     } catch (error) {
       console.error(`Error in deleting file ${hashedFileName} from S3:`, error);
       throw error;
@@ -229,7 +222,7 @@ export class VideoService {
     const fileStream = await fs.createReadStream(filePath);
     const uploadParams = {
       Bucket: this.configService.get('AWS_S3_BUCKET'),
-      Key: hashedFileName, // 해시된 파일명을 S3의 key로 사용
+      Key: hashedFileName,
       Body: fileStream,
       ContentDisposition: 'inline',
       ContentType: contentType,
@@ -242,9 +235,6 @@ export class VideoService {
       )}.s3.${this.configService.get(
         'AWS_REGION',
       )}.amazonaws.com/${hashedFileName}`;
-      console.log(
-        `S3에 ${contentType}파일 업로드 및 URL 생성 완료: ${fileUrl}`,
-      );
       return fileUrl;
     } catch (error) {
       console.error(`S3에 파일 업로드 중 오류 발생:`, error);

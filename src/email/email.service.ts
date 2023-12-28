@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
-import { User } from 'src/models/users.model';
 
 @Injectable()
 export class EmailService {
