@@ -10,6 +10,9 @@ COPY package*.json ./
 # Install app dependencies
 RUN npm install
 
+# Install ffmpeg
+RUN apk add --no-cache ffmpeg
+
 # Bundle app source
 COPY . .
 
