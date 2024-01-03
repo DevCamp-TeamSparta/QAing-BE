@@ -25,6 +25,9 @@ export class Folder extends Document {
 
   @Prop()
   progress: string;
+
+  @Prop({})
+  owner: string;
 }
 
 export const FolderSchema = SchemaFactory.createForClass(Folder);

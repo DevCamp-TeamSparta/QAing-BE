@@ -33,15 +33,6 @@ export class PresignurlController {
     }
   }
 
-  @Delete()
-  async createDeleteUrl(
-    @Body('filename') filename: string,
-    @Res() res: any,
-  ): Promise<{ url: string }> {
-    const url = await this.presignedService.getDeletePresignedUrl(filename);
-    return res.json({ url });
-  }
-
   @Post('/s3bucket')
   async fileUploadedUrl(
     @Req() req: any,

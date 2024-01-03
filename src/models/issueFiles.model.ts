@@ -15,6 +15,12 @@ export class IssueFile extends Document {
 
   @Prop()
   videoUrl: string;
+
+  @Prop({})
+  folder: string;
+
+  @Prop({})
+  owner: string;
 }
 
 export const IssueFileSchema = SchemaFactory.createForClass(IssueFile);

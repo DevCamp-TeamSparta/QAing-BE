@@ -42,16 +42,6 @@ export class PresignedService {
     }
   }
 
-  async getDeletePresignedUrl(filename: string): Promise<string> {
-    const client = this.createS3Client();
-    const command = new DeleteObjectCommand({
-      Bucket: this.configService.get('AWS_S3_BUCKET'),
-      Key: filename,
-    });
-
-    return getSignedUrl(client, command);
-  }
-
   constructFileUrl(filename: string): string {
     return `https://static.qaing.co/${filename}`;
   }

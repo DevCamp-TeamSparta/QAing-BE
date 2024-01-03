@@ -48,19 +48,22 @@ export class VideoService {
   async getFolderIdByUser(userId: string) {
     try {
       const user = await this.userModel.findById(userId);
-      const kstDate = new Date();
-      kstDate.setTime(kstDate.getTime() + 9 * 60 * 60 * 1000);
-      const folderName = `${kstDate.getFullYear()}-${this.formatToTwoDigits(
-        kstDate.getMonth() + 1,
-      )}-${this.formatToTwoDigits(kstDate.getDate())} ${this.formatToTwoDigits(
-        kstDate.getHours(),
-      )}:${this.formatToTwoDigits(kstDate.getMinutes())}`;
+      const now = new Date();
+      const kstDate = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+      const folderName = `${kstDate.getUTCFullYear()}-${this.formatToTwoDigits(
+        kstDate.getUTCMonth() + 1,
+      )}-${this.formatToTwoDigits(
+        kstDate.getUTCDate(),
+      )} ${this.formatToTwoDigits(
+        kstDate.getUTCHours(),
+      )}:${this.formatToTwoDigits(kstDate.getUTCMinutes())}`;
 
       const folder = new this.folderModel({
         folderName,
         issues: [],
         status: false,
         totalTasks: 0,
+        owner: user.userName,
       });
 
       await folder.save();
@@ -118,6 +121,7 @@ export class VideoService {
             imageUrl,
             videoUrl,
             issueNum,
+            folder._id,
           );
           folder.issues.push(createdIssueFile._id);
 
@@ -246,12 +250,16 @@ export class VideoService {
     imageUrl: string,
     videoUrl: string,
     issueNum: number,
+    folderId: string,
   ) {
     try {
+      const folder = await this.folderModel.findById(folderId);
       const newIssueFile = new this.issueFileModel({
         issueName: `이슈 ${issueNum}`,
         imageUrl,
         videoUrl,
+        folder: folder.folderName,
+        owner: folder.owner,
       });
 
       await newIssueFile.save();
