@@ -2,6 +2,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types, SchemaOptions } from 'mongoose';
 import { IssueFile } from './issueFiles.model';
+import { User } from './users.model';
 
 const options: SchemaOptions = {
   timestamps: true,
@@ -26,8 +27,8 @@ export class Folder extends Document {
   @Prop()
   progress: string;
 
-  @Prop({})
-  owner: string;
+  @Prop({ type: Types.ObjectId, ref: 'User' })
+  owner: User;
 }
 
 export const FolderSchema = SchemaFactory.createForClass(Folder);

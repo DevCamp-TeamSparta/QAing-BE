@@ -15,6 +15,8 @@ import { Folder, FolderSchema } from 'src/models/folders.model';
 import { IssueFile, IssueFileSchema } from 'src/models/issueFiles.model';
 import { VideoService } from 'src/videos/video.service';
 import { EmailService } from 'src/email/email.service';
+import { Image, ImageSchema } from 'src/models/images.model';
+import { Video, VideoSchema } from 'src/models/videos.model';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { EmailService } from 'src/email/email.service';
       { name: User.name, schema: UserSchema },
       { name: Folder.name, schema: FolderSchema },
       { name: IssueFile.name, schema: IssueFileSchema },
+      { name: Image.name, schema: ImageSchema },
+      { name: Video.name, schema: VideoSchema },
     ]),
     UserModule,
     PassportModule.register({ defaultStrategy: 'google' }),

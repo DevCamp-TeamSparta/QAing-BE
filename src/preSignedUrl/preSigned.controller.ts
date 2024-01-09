@@ -17,6 +17,7 @@ export class PresignurlController {
   async createUploadUrl(
     @Body('filename') filename: string,
     @Body('type') type: string,
+    @Body('isProfileImg') isProfileImg: boolean,
     @Res() res: any,
   ): Promise<{ url: string }> {
     try {
@@ -26,6 +27,7 @@ export class PresignurlController {
       const url = await this.presignedService.getUploadPresignedUrl(
         filename,
         type,
+        isProfileImg,
       );
       return res.json({ url });
     } catch (error) {
@@ -33,16 +35,31 @@ export class PresignurlController {
     }
   }
 
+  // @Delete()
+  // async createDeleteUrl(
+  //   @Body('filename') filename: string,
+  //   @Res() res: any,
+  // ): Promise<{ url: string }> {
+  //   const url = await this.presignedService.getDeletePresignedUrl(filename);
+  //   return res.json({ url });
+  // }
+
   @Post('/s3bucket')
   async fileUploadedUrl(
     @Req() req: any,
     @Res() res: any,
     @Body('filename') filename: string,
-    @Body('type') type: string,
+    @Body('originFileUrl') originFileUrl: string,
+    @Body('isProfileImg') isProfileImg: boolean,
   ) {
     const userId = req.user._id;
     const fileUrl = this.presignedService.constructFileUrl(filename);
-    await this.presignedService.updateUserFile(userId, fileUrl);
-    return res.json({ message: 'success', fileUrl });
+    if (isProfileImg) {
+      await this.presignedService.updateUserFile(userId, fileUrl);
+      return res.json({ message: 'success', fileUrl });
+    } else {
+      await this.presignedService.editContent(fileUrl, originFileUrl);
+      return res.json({ message: 'success', fileUrl });
+    }
   }
 }

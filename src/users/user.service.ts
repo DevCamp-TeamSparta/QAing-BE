@@ -8,6 +8,8 @@ import { UpdateFolderDto } from 'src/dto/updateFolder.dto';
 import { JwtService } from '@nestjs/jwt';
 import { VideoService } from 'src/videos/video.service';
 import { IssueFile } from 'src/models/issueFiles.model';
+import { Image } from 'src/models/images.model';
+import { Video } from 'src/models/videos.model';
 
 @Injectable()
 export class UserService {
@@ -16,7 +18,10 @@ export class UserService {
     @InjectModel(Folder.name) private readonly folderModel: Model<Folder>,
     @InjectModel(IssueFile.name)
     private readonly issueFileModel: Model<IssueFile>,
-    private readonly jwtService: JwtService,
+    @InjectModel(Image.name)
+    private readonly imageModel: Model<Image>,
+    @InjectModel(Video.name)
+    private readonly videoModel: Model<Video>,
     private readonly videoService: VideoService,
   ) {}
 
@@ -51,7 +56,18 @@ export class UserService {
     for (const folderId of user.folders) {
       const folder = await this.folderModel
         .findById(folderId)
-        .populate('issues');
+        .populate({
+          path: 'issues',
+          populate: {
+            path: 'images',
+          },
+        })
+        .populate({
+          path: 'issues',
+          populate: {
+            path: 'video',
+          },
+        });
       if (folder) {
         foldersWithContents.unshift(folder);
       }
@@ -90,26 +106,51 @@ export class UserService {
   }
 
   async deleteFolder(userId: string, folderId: string): Promise<void> {
-    const folder = await this.folderModel.findById(folderId).populate('issues');
+    const folder = await this.folderModel
+      .findById(folderId)
+      .populate({
+        path: 'issues',
+        populate: {
+          path: 'images',
+          model: 'Image',
+        },
+      })
+      .populate({
+        path: 'issues',
+        populate: {
+          path: 'video',
+          model: 'Video',
+        },
+      });
 
     if (!folder) {
       throw new NotFoundException('Folder not found');
     }
 
-    for (const issueFileId of folder.issues) {
-      const issueFile = await this.issueFileModel.findById(issueFileId);
+    for (const issueId of folder.issues) {
+      const issueFile = await this.issueFileModel.findById(issueId);
+      const videoId = issueFile.video;
+      const mp4File = await this.videoModel.findById(videoId);
 
-      if (issueFile.imageUrl) {
-        const imageName = issueFile.imageUrl.split('/').pop();
+      for (const imageId of issueFile.images) {
+        const image = await this.imageModel.findById(imageId);
+        const imageName = image.originImageUrl.split('/').pop();
         if (imageName) {
           await this.videoService.deleteFromS3(imageName);
+          await this.imageModel.deleteOne({ _id: imageId });
+        } else {
+          continue;
         }
       }
-      if (issueFile.videoUrl) {
-        const videoName = issueFile.videoUrl.split('/').pop();
+
+      if (mp4File) {
+        const videoName = mp4File.originVideoUrl.split('/').pop();
         if (videoName) {
           await this.videoService.deleteFromS3(videoName);
+          await this.videoModel.deleteOne({ _id: videoId });
         }
+      } else {
+        break;
       }
 
       await this.issueFileModel.deleteOne({ _id: issueFile._id });

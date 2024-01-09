@@ -15,6 +15,8 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { User } from 'src/models/users.model';
 import * as crypto from 'crypto';
+import { Image } from 'src/models/images.model';
+import { Video } from 'src/models/videos.model';
 
 const execAsync = promisify(exec);
 //테스트 커밋
@@ -24,12 +26,16 @@ export class VideoService {
   private folderUpdateSubscribers: Map<string, Function[]> = new Map();
 
   constructor(
-    @InjectModel(IssueFile.name)
-    private issueFileModel: Model<IssueFile>,
-    @InjectModel(Folder.name)
-    private folderModel: Model<Folder>,
     @InjectModel(User.name)
     private userModel: Model<User>,
+    @InjectModel(Folder.name)
+    private folderModel: Model<Folder>,
+    @InjectModel(IssueFile.name)
+    private issueFileModel: Model<IssueFile>,
+    @InjectModel(Image.name)
+    private imageModel: Model<Image>,
+    @InjectModel(Video.name)
+    private videoModel: Model<Video>,
     private readonly configService: ConfigService,
   ) {
     this.s3Client = new S3Client({
@@ -49,7 +55,10 @@ export class VideoService {
     try {
       const user = await this.userModel.findById(userId);
       const now = new Date();
+
+      // KST 시간으로 변환합니다. (UTC+9)
       const kstDate = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+
       const folderName = `${kstDate.getUTCFullYear()}-${this.formatToTwoDigits(
         kstDate.getUTCMonth() + 1,
       )}-${this.formatToTwoDigits(
@@ -63,7 +72,7 @@ export class VideoService {
         issues: [],
         status: false,
         totalTasks: 0,
-        owner: user.userName,
+        owner: user,
       });
 
       await folder.save();
@@ -100,7 +109,7 @@ export class VideoService {
         for (const timestamp of timestamps) {
           const hashedImageName = `${this.hashString(
             `image_${folderId}_${issueNum}`,
-          )}.jpg`;
+          )}.png`;
           const hashedVideoName = `${this.hashString(
             `video_${folderId}_${issueNum}`,
           )}.mp4`;
@@ -122,6 +131,7 @@ export class VideoService {
             videoUrl,
             issueNum,
             folder._id,
+            timestamp,
           );
           folder.issues.push(createdIssueFile._id);
 
@@ -163,20 +173,38 @@ export class VideoService {
     }
   }
 
+  private async getVideoDuration(filePath: string): Promise<number> {
+    try {
+      const command = `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filePath}"`;
+      const { stdout } = await execAsync(command);
+      return parseFloat(stdout.trim());
+    } catch (error) {
+      console.error('Error getting video duration:', error);
+      throw error;
+    }
+  }
+
   private async processMedia(
     webmFilePath: string,
     timestamp: number,
     hashedFileName: string,
-
     mediaType: 'image' | 'video',
   ): Promise<string> {
+    let totalVideoLength: number;
+    if (mediaType == 'video') {
+      totalVideoLength = await this.getVideoDuration(webmFilePath);
+    }
     const outputPath = path.join(__dirname, hashedFileName);
     const command =
       mediaType === 'image'
         ? `ffmpeg -ss ${timestamp} -i ${webmFilePath} -vframes 1 -q:v 2 ${outputPath}`
         : `ffmpeg -ss ${
-            timestamp - 10
-          } -i ${webmFilePath} -t 20 -c:v libx264 -preset superfast -b:v 600k -r 30 -c:a aac ${outputPath}
+            timestamp - 10 < 0 ? 0 : timestamp - 10
+          } -i ${webmFilePath} -t ${
+            timestamp + 10 > totalVideoLength
+              ? totalVideoLength
+              : timestamp + 10
+          } -c:v libx264 -preset superfast -b:v 600k -r 30 -c:a aac ${outputPath}
       `;
 
     try {
@@ -215,6 +243,9 @@ export class VideoService {
       case 'jpg':
         contentType = 'image/jpeg';
         break;
+      case 'png':
+        contentType = 'image/png';
+        break;
       case 'mp4':
         contentType = 'video/mp4';
         break;
@@ -251,17 +282,43 @@ export class VideoService {
     videoUrl: string,
     issueNum: number,
     folderId: string,
+    timestamp: number,
   ) {
     try {
-      const folder = await this.folderModel.findById(folderId);
+      const folder = await this.folderModel
+        .findById(folderId)
+        .populate(['issues', 'owner']);
+
       const newIssueFile = new this.issueFileModel({
         issueName: `이슈 ${issueNum}`,
-        imageUrl,
-        videoUrl,
-        folder: folder.folderName,
+        images: [],
+        video: null,
+        parentFolder: folder._id,
         owner: folder.owner,
       });
 
+      await newIssueFile.save();
+
+      const imageFile = new this.imageModel({
+        originImageUrl: imageUrl,
+        editedImageUrl: null,
+        timestamp,
+        parentIssueFile: newIssueFile._id,
+        owner: folder.owner,
+      });
+
+      const videoFile = new this.videoModel({
+        originVideoUrl: videoUrl,
+        editedVideoUrl: null,
+        parentIssueFile: newIssueFile._id,
+        owner: folder.owner,
+      });
+
+      await imageFile.save();
+      await videoFile.save();
+
+      newIssueFile.images.push(imageFile._id);
+      newIssueFile.video = videoFile._id;
       await newIssueFile.save();
 
       return newIssueFile;

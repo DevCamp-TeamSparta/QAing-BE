@@ -23,6 +23,12 @@ import { Folder, FolderSchema } from './models/folders.model';
 import { PreSingedModule } from './preSignedUrl/preSigned.module';
 import { FolderModule } from './folders/folder.module';
 import { EmailService } from './email/email.service';
+import { Image, ImageSchema } from './models/images.model';
+import { Video, VideoSchema } from './models/videos.model';
+import { ApiService } from './api/api.service';
+import { mappedUrl } from './models/mappedUrl.model';
+import { MappedUrlSchema } from './models/mappedUrl.model';
+import { ApiModule } from './api/api.module';
 
 @Module({
   imports: [
@@ -36,6 +42,9 @@ import { EmailService } from './email/email.service';
       { name: User.name, schema: UserSchema },
       { name: IssueFile.name, schema: IssueFileSchema },
       { name: Folder.name, schema: FolderSchema },
+      { name: Image.name, schema: ImageSchema },
+      { name: Video.name, schema: VideoSchema },
+      { name: mappedUrl.name, schema: MappedUrlSchema },
     ]),
     UserModule,
     VideoModule,
@@ -43,6 +52,7 @@ import { EmailService } from './email/email.service';
     AuthModule,
     PreSingedModule,
     FolderModule,
+    ApiModule,
   ],
   controllers: [
     AppController,
@@ -59,6 +69,7 @@ import { EmailService } from './email/email.service';
     FolderService,
     ConfigService,
     EmailService,
+    ApiService,
   ],
 })
 export class AppModule {}
